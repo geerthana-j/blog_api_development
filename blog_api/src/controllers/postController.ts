@@ -1,21 +1,43 @@
 import { Request, Response } from 'express';
-import { Collection, ObjectID, MongoClient } from 'mongodb';
-import { postCollection } from '../models/Post'; // Adjust the path
+import { Collection, ObjectId, MongoClient } from 'mongodb';
+import {createCollection,IPost,closeDB} from '../models/Post';
+async function getPostCollection(): Promise<Collection<IPost> | null> {
+  const postCollection = await createCollection();
+  return postCollection;
+}
+
 
 export const getPosts = async (req: Request, res: Response) => {
+  
   try {
+    const postCollection = await getPostCollection();
+    if (!postCollection) {
+      throw new Error('postCollection is null');
+    }
     const posts = await postCollection.find({}).toArray();
     res.json(posts);
   } catch (error) {
     console.error('Error retrieving blog posts:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+  finally{
+    await closeDB()
+   }
+ 
 };
 
 export const getPostsById = async (req: Request, res: Response) => {
   try {
+    const postCollection = await getPostCollection();
+    if (!postCollection) {
+      throw new Error('postCollection is null');
+    }
     const postId = req.params.id;
-    const post = await postCollection.findOne({ _id: new ObjectID(postId) });
+
+    if (!ObjectId.isValid(postId)) {
+      return res.status(400).json({ error: 'Invalid ObjectId' });
+    }
+    const post = await postCollection.findOne({ _id: new ObjectId(postId) });
 
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
@@ -27,10 +49,17 @@ export const getPostsById = async (req: Request, res: Response) => {
     console.error('Error retrieving blog post:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+  finally{
+    await closeDB()
+   }
 };
 
 export const createPost = async (req: Request, res: Response) => {
-  try {
+  try{
+    const postCollection = await getPostCollection();
+    if (!postCollection) {
+      throw new Error('postCollection is null');
+    }
     const { title, content, category_id } = req.body;
 
     if (!title || !content || !category_id) {
@@ -44,19 +73,28 @@ export const createPost = async (req: Request, res: Response) => {
       updated_at: new Date(),
       category_id
     };
+     await postCollection.insertOne(post);
 
-    const result = await postCollection.insertOne(post);
-
-    res.json(result.ops[0]);
+    res.json({message:"Post created successfully"});
   } catch (error) {
     console.error('Error creating blog post:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+  finally{
+    await closeDB()
+   }
 };
 
 export const updatePost = async (req: Request, res: Response) => {
-  try {
+  try{
+    const postCollection = await getPostCollection();
+    if (!postCollection) {
+      throw new Error('postCollection is null');
+    }
     const postId = req.params.id;
+    if (!ObjectId.isValid(postId)) {
+      return res.status(400).json({ error: 'Invalid ObjectId' });
+    }
     const { title, content } = req.body;
 
     if (!title || !content) {
@@ -64,7 +102,7 @@ export const updatePost = async (req: Request, res: Response) => {
     }
 
     const result = await postCollection.updateOne(
-      { _id: new ObjectID(postId) },
+      { _id: new ObjectId(postId) },
       { $set: { title, content, updated_at: new Date() } }
     );
 
@@ -77,13 +115,23 @@ export const updatePost = async (req: Request, res: Response) => {
     console.error('Error updating blog post:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+  finally{
+    await closeDB()
+   }
 };
 
 export const deletePost = async (req: Request, res: Response) => {
-  try {
+  try{
+   const postCollection = await getPostCollection();
+    if (!postCollection) {
+      throw new Error('postCollection is null');
+    }
     const postId = req.params.id;
+    if (!ObjectId.isValid(postId)) {
+      return res.status(400).json({ error: 'Invalid ObjectId' });
+    }
 
-    const result = await postCollection.deleteOne({ _id: new ObjectID(postId) });
+    const result = await postCollection.deleteOne({ _id: new ObjectId(postId) });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Post not found' });
@@ -94,10 +142,17 @@ export const deletePost = async (req: Request, res: Response) => {
     console.error('Error deleting blog post:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+  finally{
+    await closeDB()
+   }
 };
 
 export const getLatestPosts = async (req: Request, res: Response) => {
-  try {
+  try{
+  const postCollection = await getPostCollection();
+    if (!postCollection) {
+      throw new Error('postCollection is null');
+    }
     const pipeline = [
       {
         $sort: { created_at: -1 }
@@ -119,5 +174,8 @@ export const getLatestPosts = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error retrieving latest blog posts:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+  finally{
+    await closeDB()
   }
 };
