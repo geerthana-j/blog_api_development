@@ -23,7 +23,6 @@ A RESTful API for managing blog posts with MongoDB as the database, implemented 
 - **Validation**: Implements validation for request parameters and request body.
 - **Error Handling**: Provides proper error handling for database operations and invalid requests.
 - **Security**: Protects against common security threats, including SQL Injection.
-- **Authentication**: Implements basic authentication or API key validation for securing endpoints, especially `/api/posts/latest`.
 
 ## Prerequisites
 
