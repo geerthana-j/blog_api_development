@@ -39,13 +39,15 @@ Before you begin, ensure you have met the following requirements:
 ### Installation
 
 1. Clone this repository:
+```bash
 git clone https://github.com/geerthana-j/blog_api_development.git
 cd blog_api_development
+```
 
-2. Install dependencies:
+3. Install dependencies:
 npm install
 
-3. Start the application:
+4. Start the application:
 npm start
 
 ## Usage
