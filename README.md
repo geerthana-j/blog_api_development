@@ -43,12 +43,15 @@ git clone https://github.com/geerthana-j/blog_api_development.git
 cd blog_api_development
 ```
 
-3. Install dependencies:
+2. Install dependencies:
+```bash
 npm install
+```
 
-4. Start the application:
+3. Start the application:
+```bash
 npm start
-
+```
 ## Usage
 
 ### API Endpoints
